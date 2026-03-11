@@ -94,14 +94,43 @@ proposalTextInput.addEventListener('input', function(e) {
     pdfBodyContent.innerHTML = finalHtml;
 });
 
-// 5. Gerar PDF com Segurança Total Anti-Bugs
+// 5. Motor de Exportação Definitivo (Usa a técnica de CLONE)
 btnGenerate.addEventListener('click', function() {
     
     const originalText = btnGenerate.innerHTML;
-    btnGenerate.innerHTML = 'Gerando Documento... <span class="material-symbols-outlined" style="vertical-align: middle; font-size: 1.1em; margin-left: 5px;">hourglass_empty</span>';
+    btnGenerate.innerHTML = 'Gerando Documento Perfeito... <span class="material-symbols-outlined" style="vertical-align: middle; font-size: 1.1em; margin-left: 5px;">hourglass_empty</span>';
     btnGenerate.disabled = true;
 
-    // Aplica a classe que força a largura fixa (800px) e desativa transparências
+    // Configuração avançada de exportação
+    const opt = {
+        margin:       [15, 15, 15, 15], // 15mm de margem nativa e real no papel A4
+        filename:     `Proposta_MOTOLOG_${clientNameInput.value || 'Cliente'}.pdf`,
+        image:        { type: 'jpeg', quality: 1 },
+        html2canvas:  { 
+            scale: 2, 
+            useCORS: true, 
+            backgroundColor: '#ffffff',
+            windowWidth: 800, // Trava a "lente da câmera" em 800px cravados
+            // A MÁGICA: O onclone permite modificar o documento em background antes de tirar a foto
+            onclone: function(clonedDoc) {
+                const elementToPrint = clonedDoc.getElementById('pdf-content');
+                // Aplica a classe que desativa o Flexbox conflitante e as transparências
+                elementToPrint.classList.add('pdf-strict-export');
+            }
+        }, 
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak:    { 
+            mode: ['css', 'legacy'], 
+            // Instrução rigorosa para o motor de PDF: NUNCA corte esses elementos ao meio
+            avoid: ['.pdf-glass-card', '.stats-card', 'tr', 'h1', 'h2'] 
+        }
+    };
+
+    html2pdf().set(opt).from(pdfElement).save().then(() => {
+        btnGenerate.innerHTML = originalText;
+        btnGenerate.disabled = false;
+    });
+});
     pdfElement.classList.add('exporting');
 
     // Usa um setTimeout para dar tempo ao navegador de repintar a tela antes da "foto"
