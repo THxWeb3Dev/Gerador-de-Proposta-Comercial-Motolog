@@ -94,31 +94,34 @@ proposalTextInput.addEventListener('input', function(e) {
     pdfBodyContent.innerHTML = finalHtml;
 });
 
-// 5. Gerar e Salvar o PDF com margens reais
+// 5. Gerar e Salvar o PDF corrigindo problemas de quebra de tela
 btnGenerate.addEventListener('click', function() {
     
-    // Configurações avançadas para correção de quebras de página
     const opt = {
-        margin:       [15, 15, 15, 15], // Margens NATIVAS do PDF em mm (Topo, Esquerda, Baixo, Direita)
+        margin:       [15, 15, 15, 15], 
         filename:     `Proposta_MOTOLOG_${clientNameInput.value || 'Cliente'}.pdf`,
         image:        { type: 'jpeg', quality: 1 },
-        html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff' }, // Scale 2 previne cortes agressivos
+        html2canvas:  { 
+            scale: 2, 
+            useCORS: true, 
+            backgroundColor: '#ffffff',
+            scrollY: 0 // Corrige bugs se a tela estiver rolada para baixo
+        }, 
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak:    { mode: ['css', 'legacy'] } // Ativa a leitura correta de quebra de página
+        pagebreak:    { mode: ['css', 'legacy'] }
     };
 
     const originalText = btnGenerate.innerHTML;
     btnGenerate.innerHTML = 'Gerando Documento... <span class="material-symbols-outlined" style="vertical-align: middle; font-size: 1.1em; margin-left: 5px;">hourglass_empty</span>';
     btnGenerate.disabled = true;
 
-    // Adiciona classe para remover o padding visual do CSS e deixar o gerador trabalhar
+    // Adiciona a classe mágica que desativa o Flexbox antes de tirar a "foto" para o PDF
     pdfElement.classList.add('exporting');
 
     html2pdf().set(opt).from(pdfElement).save().then(() => {
-        // Remove a classe para a tela voltar ao normal
+        // Remove a classe para a tela voltar ao normal após o download
         pdfElement.classList.remove('exporting');
         btnGenerate.innerHTML = originalText;
         btnGenerate.disabled = false;
     });
 });
-
