@@ -146,4 +146,48 @@ btnGenerate.addEventListener('click', function() {
         btnGenerate.disabled = false;
     });
 });
+    });
+    
+    if (currentCardContent !== '') {
+        finalHtml += `<div class="pdf-glass-card">${currentCardContent}</div>`;
+    }
+    
+    pdfBodyContent.innerHTML = finalHtml;
+});
+
+// 5. Motor de Exportação Definitivo (Usa a técnica de CLONE Rígido)
+btnGenerate.addEventListener('click', function() {
+    
+    const originalText = btnGenerate.innerHTML;
+    btnGenerate.innerHTML = 'Gerando Documento Perfeito... <span class="material-symbols-outlined" style="vertical-align: middle; font-size: 1.1em; margin-left: 5px;">hourglass_empty</span>';
+    btnGenerate.disabled = true;
+
+    const opt = {
+        margin:       [15, 15, 15, 15], 
+        filename:     `Proposta_MOTOLOG_${clientNameInput.value || 'Cliente'}.pdf`,
+        image:        { type: 'jpeg', quality: 1 },
+        html2canvas:  { 
+            scale: 2, 
+            useCORS: true, 
+            backgroundColor: '#ffffff',
+            windowWidth: 800, 
+            onclone: function(clonedDoc) {
+                const elementToPrint = clonedDoc.getElementById('pdf-content');
+                if(elementToPrint) {
+                    elementToPrint.classList.add('pdf-strict-export');
+                }
+            }
+        }, 
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak:    { 
+            mode: ['css', 'legacy'], 
+            avoid: ['.pdf-glass-card', '.stats-card', 'tr', 'h1', 'h2'] 
+        }
+    };
+
+    html2pdf().set(opt).from(pdfElement).save().then(() => {
+        btnGenerate.innerHTML = originalText;
+        btnGenerate.disabled = false;
+    });
+});
 
