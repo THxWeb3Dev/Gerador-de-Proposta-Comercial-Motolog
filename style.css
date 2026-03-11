@@ -132,7 +132,6 @@ textarea {
     font-size: 1.25em;
     vertical-align: middle;
     color: var(--accent-color);
-    filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.08)); 
 }
 
 .preview-area {
@@ -149,7 +148,7 @@ textarea {
 }
 
 /* ========================================================= */
-/* BASE A4 PARA VISUALIZAÇÃO NA TELA (Navegador)             */
+/* LAYOUT DA TELA (VISUALIZAÇÃO NO NAVEGADOR)                */
 /* ========================================================= */
 .a4-wrapper {
     background: var(--pdf-bg);
@@ -174,11 +173,6 @@ textarea {
     background: radial-gradient(circle, rgba(234, 179, 8, 0.08), transparent 70%);
     pointer-events: none;
     z-index: 0;
-}
-
-.pdf-header, .pdf-body, .stats-card, .pdf-footer {
-    position: relative;
-    z-index: 1;
 }
 
 .pdf-header {
@@ -224,15 +218,12 @@ textarea {
     font-weight: 700;
 }
 
-/* Estilo do Card na Tela */
 .pdf-glass-card {
     background: var(--pdf-card-bg);
     border: 1px solid var(--pdf-card-border);
     border-radius: 8px;
-    padding: 15px 20px;
+    padding: 18px 20px;
     margin-bottom: 15px;
-    page-break-inside: avoid;
-    break-inside: avoid;
 }
 
 .stats-card {
@@ -249,7 +240,6 @@ textarea {
     align-items: center;
     color: var(--text-main);
 }
-.stats-list strong { color: var(--accent-color); font-size: 1.1rem; margin: 0 5px; }
 
 .pdf-body {
     flex: 1;
@@ -304,7 +294,6 @@ textarea {
     height: 1.2em;
     vertical-align: middle;
     margin-right: 6px;
-    filter: drop-shadow(1px 2px 2px rgba(0,0,0,0.1));
 }
 
 .pdf-footer {
@@ -324,46 +313,76 @@ textarea {
 }
 
 /* ========================================================================= */
-/* MODO EXPORTAÇÃO (IMPRESSÃO): Regras Invioláveis para o Gerador de PDF     */
+/* MODO EXPORTAÇÃO (CLONE INVISÍVEL): REGRAS PARA O PDF PERFEITO             */
 /* ========================================================================= */
-
-/* 1. Trava a largura do contêiner para não cortar o texto direito */
-.a4-wrapper.exporting {
+.pdf-strict-export {
+    /* 1. Trava matemática exata da largura para garantir que o texto não corte */
     width: 800px !important; 
     max-width: 800px !important;
     padding: 0 !important;
     margin: 0 !important;
     box-shadow: none !important;
     border-radius: 0 !important;
-    min-height: auto !important;
-    display: block !important; /* Remove flexbox raiz que embaralha quebras */
-}
-
-/* 2. Força renderização sólida dos blocos para evitar cards bugados/invisíveis */
-.a4-wrapper.exporting .pdf-glass-card,
-.a4-wrapper.exporting .stats-card {
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    background-color: #f8fafc !important; /* Fundo cinza bem claro sólido */
-    border: 1px solid #cbd5e1 !important; /* Borda visível sólida */
-    box-shadow: none !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-    margin-bottom: 25px !important;
+    background: #ffffff !important;
     display: block !important;
 }
 
-/* 3. Garante que todo o corpo funcione como texto contínuo padrão */
-.a4-wrapper.exporting .pdf-body {
+/* Garante que nenhum texto ultrapasse os limites laterais */
+.pdf-strict-export * {
+    box-sizing: border-box !important;
+    max-width: 100% !important;
+}
+
+/* 2. Força os blocos a serem renderizados como blocos sólidos e opacos */
+.pdf-strict-export .pdf-glass-card,
+.pdf-strict-export .stats-card {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background-color: #f8fafc !important; /* Cor sólida clara */
+    border: 1px solid #cbd5e1 !important; /* Borda precisa e sólida */
+    box-shadow: none !important;
+    margin-bottom: 25px !important;
+    display: block !important;
+    /* 3. A regra de ouro para não fatiar os cards */
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+}
+
+/* Desativa os brilhos decorativos que corrompem a foto do html2canvas */
+.pdf-strict-export .pdf-bg-glow {
+    display: none !important;
+}
+
+.pdf-strict-export .pdf-body {
     display: block !important;
     flex: none !important;
 }
 
-.a4-wrapper.exporting .pdf-footer {
+.pdf-strict-export .pdf-header {
+    display: flex !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
+}
+
+.pdf-strict-export .pdf-footer {
     display: block !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
     margin-top: 30px !important;
+}
+
+/* Previne que tabelas quebrem as margens e cortem na direita */
+.pdf-strict-export table {
+    width: 100% !important;
+    table-layout: fixed !important;
+}
+
+.pdf-strict-export td, 
+.pdf-strict-export th,
+.pdf-strict-export p,
+.pdf-strict-export li {
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
 }
 
 @media (max-width: 1024px) {
