@@ -94,34 +94,41 @@ proposalTextInput.addEventListener('input', function(e) {
     pdfBodyContent.innerHTML = finalHtml;
 });
 
-// 5. Gerar e Salvar o PDF corrigindo problemas de quebra de tela
+// 5. Gerar PDF com Segurança Total Anti-Bugs
 btnGenerate.addEventListener('click', function() {
     
-    const opt = {
-        margin:       [15, 15, 15, 15], 
-        filename:     `Proposta_MOTOLOG_${clientNameInput.value || 'Cliente'}.pdf`,
-        image:        { type: 'jpeg', quality: 1 },
-        html2canvas:  { 
-            scale: 2, 
-            useCORS: true, 
-            backgroundColor: '#ffffff',
-            scrollY: 0 // Corrige bugs se a tela estiver rolada para baixo
-        }, 
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak:    { mode: ['css', 'legacy'] }
-    };
-
     const originalText = btnGenerate.innerHTML;
     btnGenerate.innerHTML = 'Gerando Documento... <span class="material-symbols-outlined" style="vertical-align: middle; font-size: 1.1em; margin-left: 5px;">hourglass_empty</span>';
     btnGenerate.disabled = true;
 
-    // Adiciona a classe mágica que desativa o Flexbox antes de tirar a "foto" para o PDF
+    // Aplica a classe que força a largura fixa (800px) e desativa transparências
     pdfElement.classList.add('exporting');
 
-    html2pdf().set(opt).from(pdfElement).save().then(() => {
-        // Remove a classe para a tela voltar ao normal após o download
-        pdfElement.classList.remove('exporting');
-        btnGenerate.innerHTML = originalText;
-        btnGenerate.disabled = false;
-    });
+    // Usa um setTimeout para dar tempo ao navegador de repintar a tela antes da "foto"
+    setTimeout(() => {
+        const opt = {
+            margin:       [15, 15, 15, 15], // Margens perfeitas NATIVAS no PDF (em mm)
+            filename:     `Proposta_MOTOLOG_${clientNameInput.value || 'Cliente'}.pdf`,
+            image:        { type: 'jpeg', quality: 1 },
+            html2canvas:  { 
+                scale: 2, 
+                useCORS: true, 
+                backgroundColor: '#ffffff',
+                [span_2](start_span)[span_3](start_span)windowWidth: 800 // Força o canvas a ler exatamente a largura do CSS, sem cortar nada[span_2](end_span)[span_3](end_span)
+            }, 
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak:    { 
+                mode: ['css', 'legacy'], 
+                [span_4](start_span)avoid: ['.pdf-glass-card', '.stats-card', '.pdf-header', '.pdf-footer'] // Comando vital para não fatiar os cards ao meio[span_4](end_span)
+            }
+        };
+
+        html2pdf().set(opt).from(pdfElement).save().then(() => {
+            // Remove a classe de impressão para a tela web voltar ao normal suavemente
+            pdfElement.classList.remove('exporting');
+            btnGenerate.innerHTML = originalText;
+            btnGenerate.disabled = false;
+        });
+    }, 150); // Delay de 150 milissegundos para estabilização do DOM
 });
+
