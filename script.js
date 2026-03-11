@@ -44,7 +44,7 @@ clientNameInput.addEventListener('input', e => {
     pdfClient.textContent = e.target.value.trim() || 'Cliente';
 });
 
-// 4. Renderizar Texto e Formatar Cards
+// 4. Renderizar Texto e Formatar Cards (COM SISTEMA ANTI-FALHAS)
 proposalTextInput.addEventListener('input', function(e) {
     const markdownText = e.target.value;
     
@@ -53,7 +53,24 @@ proposalTextInput.addEventListener('input', function(e) {
         return;
     }
 
-    let rawHtml = marked.parse(markdownText);
+    let rawHtml = '';
+    
+    // Tratativa de Erro: Garante que o marked rode independente da versão carregada
+    try {
+        if (typeof marked.parse === 'function') {
+            rawHtml = marked.parse(markdownText);
+        } else if (typeof marked === 'function') {
+            rawHtml = marked(markdownText);
+        } else {
+            throw new Error("Biblioteca Marked.js não encontrada.");
+        }
+    } catch (error) {
+        console.error("Erro de leitura do texto:", error);
+        pdfBodyContent.innerHTML = `<p style="color: red; padding: 20px;"><strong>Erro do Sistema:</strong> Falha ao processar o texto. Verifique sua conexão ou recarregue a página (Ctrl + F5).</p>`;
+        return;
+    }
+
+    // Aplica o ícone do WhatsApp
     rawHtml = rawHtml.replace(/<strong>WhatsApp:<\/strong>/g, `<strong>${waSvgIcon}WhatsApp:</strong>`);
 
     const tempDiv = document.createElement('div');
@@ -94,34 +111,32 @@ proposalTextInput.addEventListener('input', function(e) {
     pdfBodyContent.innerHTML = finalHtml;
 });
 
-// 5. Motor de Exportação Definitivo (Usa a técnica de CLONE)
+// 5. Motor de Exportação Definitivo (Usa a técnica de CLONE Rígido)
 btnGenerate.addEventListener('click', function() {
     
     const originalText = btnGenerate.innerHTML;
     btnGenerate.innerHTML = 'Gerando Documento Perfeito... <span class="material-symbols-outlined" style="vertical-align: middle; font-size: 1.1em; margin-left: 5px;">hourglass_empty</span>';
     btnGenerate.disabled = true;
 
-    // Configuração avançada de exportação
     const opt = {
-        margin:       [15, 15, 15, 15], // 15mm de margem nativa e real no papel A4
+        margin:       [15, 15, 15, 15], 
         filename:     `Proposta_MOTOLOG_${clientNameInput.value || 'Cliente'}.pdf`,
         image:        { type: 'jpeg', quality: 1 },
         html2canvas:  { 
             scale: 2, 
             useCORS: true, 
             backgroundColor: '#ffffff',
-            windowWidth: 800, // Trava a "lente da câmera" em 800px cravados
-            // A MÁGICA: O onclone permite modificar o documento em background antes de tirar a foto
+            windowWidth: 800, 
             onclone: function(clonedDoc) {
                 const elementToPrint = clonedDoc.getElementById('pdf-content');
-                // Aplica a classe que desativa o Flexbox conflitante e as transparências
-                elementToPrint.classList.add('pdf-strict-export');
+                if(elementToPrint) {
+                    elementToPrint.classList.add('pdf-strict-export');
+                }
             }
         }, 
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
         pagebreak:    { 
             mode: ['css', 'legacy'], 
-            // Instrução rigorosa para o motor de PDF: NUNCA corte esses elementos ao meio
             avoid: ['.pdf-glass-card', '.stats-card', 'tr', 'h1', 'h2'] 
         }
     };
@@ -130,34 +145,5 @@ btnGenerate.addEventListener('click', function() {
         btnGenerate.innerHTML = originalText;
         btnGenerate.disabled = false;
     });
-});
-    pdfElement.classList.add('exporting');
-
-    // Usa um setTimeout para dar tempo ao navegador de repintar a tela antes da "foto"
-    setTimeout(() => {
-        const opt = {
-            margin:       [15, 15, 15, 15], // Margens perfeitas NATIVAS no PDF (em mm)
-            filename:     `Proposta_MOTOLOG_${clientNameInput.value || 'Cliente'}.pdf`,
-            image:        { type: 'jpeg', quality: 1 },
-            html2canvas:  { 
-                scale: 2, 
-                useCORS: true, 
-                backgroundColor: '#ffffff',
-                [span_2](start_span)[span_3](start_span)windowWidth: 800 // Força o canvas a ler exatamente a largura do CSS, sem cortar nada[span_2](end_span)[span_3](end_span)
-            }, 
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            pagebreak:    { 
-                mode: ['css', 'legacy'], 
-                [span_4](start_span)avoid: ['.pdf-glass-card', '.stats-card', '.pdf-header', '.pdf-footer'] // Comando vital para não fatiar os cards ao meio[span_4](end_span)
-            }
-        };
-
-        html2pdf().set(opt).from(pdfElement).save().then(() => {
-            // Remove a classe de impressão para a tela web voltar ao normal suavemente
-            pdfElement.classList.remove('exporting');
-            btnGenerate.innerHTML = originalText;
-            btnGenerate.disabled = false;
-        });
-    }, 150); // Delay de 150 milissegundos para estabilização do DOM
 });
 
