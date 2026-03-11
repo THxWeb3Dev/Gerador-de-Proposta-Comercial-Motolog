@@ -1,0 +1,345 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+:root {
+    /* Paleta Clear / Light Mode */
+    --bg-color: #f1f5f9; 
+    --glass-bg: rgba(255, 255, 255, 0.85); 
+    --glass-border: rgba(0, 0, 0, 0.08); 
+    
+    --accent-color: #d97706; 
+    --accent-glow: rgba(217, 119, 6, 0.15);
+    
+    --text-main: #0f172a; 
+    --text-muted: #475569; 
+    
+    /* Variáveis do PDF (Folha Branca) */
+    --pdf-bg: #ffffff;
+    --pdf-card-bg: rgba(248, 250, 252, 0.9);
+    --pdf-card-border: rgba(15, 23, 42, 0.06);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    background: var(--bg-color);
+    color: var(--text-main);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background-image: radial-gradient(circle at 10% 20%, rgba(217, 119, 6, 0.05), transparent 40%),
+                      radial-gradient(circle at 90% 80%, rgba(15, 23, 42, 0.03), transparent 40%);
+}
+
+.app-container {
+    display: flex;
+    gap: 30px;
+    width: 100%;
+    max-width: 1500px;
+    height: 90vh;
+}
+
+/* --- PAINEL EDITOR --- */
+.glass-panel {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.05);
+}
+
+.editor-panel {
+    flex: 0 0 420px;
+    overflow-y: auto;
+}
+
+.brand h2 {
+    color: var(--text-main);
+    font-size: 1.8rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.brand p {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    margin-top: 5px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.input-group label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+input[type="text"], textarea, input[type="file"] {
+    width: 100%;
+    padding: 14px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    color: var(--text-main);
+    font-size: 0.95rem;
+    outline: none;
+    transition: all 0.3s ease;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+}
+
+input[type="text"]:focus, textarea:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+textarea {
+    resize: vertical;
+}
+
+.primary-btn {
+    background: linear-gradient(135deg, #facc15, #eab308); 
+    color: #1e293b;
+    border: none;
+    padding: 16px;
+    border-radius: 10px;
+    font-weight: 800;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: auto;
+    box-shadow: 0 8px 15px rgba(234, 179, 8, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.primary-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 20px rgba(234, 179, 8, 0.35);
+}
+
+/* Ícones Formais (Google Material Symbols) */
+.material-symbols-outlined {
+    font-size: 1.25em;
+    vertical-align: middle;
+    color: var(--accent-color);
+    filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.08)); /* Sombra sutil para manter a formalidade */
+}
+
+/* --- ÁREA DE PREVIEW E PDF --- */
+.preview-area {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    justify-content: center;
+    padding: 10px;
+}
+
+.preview-area::-webkit-scrollbar, .editor-panel::-webkit-scrollbar { width: 8px; }
+.preview-area::-webkit-scrollbar-thumb, .editor-panel::-webkit-scrollbar-thumb {
+    background: #cbd5e1; border-radius: 4px;
+}
+
+/* PDF Folha Branca */
+.a4-wrapper {
+    background: var(--pdf-bg);
+    color: var(--text-main);
+    width: 210mm;
+    min-height: 297mm;
+    padding: 25mm 20mm;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+}
+
+.pdf-bg-glow {
+    position: absolute;
+    top: -150px;
+    right: -150px;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(234, 179, 8, 0.08), transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.pdf-header, .pdf-body, .stats-card, .pdf-footer {
+    position: relative;
+    z-index: 1;
+}
+
+.pdf-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 25px;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 25px;
+    margin-bottom: 30px;
+}
+
+#pdf-logo {
+    max-height: 90px;
+    max-width: 180px;
+    object-fit: contain;
+}
+
+.header-text h1 {
+    font-size: 2.2rem;
+    color: var(--text-main);
+    letter-spacing: -0.5px;
+}
+
+.header-text p {
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    margin-top: 5px;
+}
+
+.dates-badge {
+    margin-top: 15px;
+    display: inline-block;
+    background: #f8fafc;
+    padding: 8px 15px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    border: 1px solid #e2e8f0;
+}
+
+.highlight-date {
+    color: var(--accent-color);
+    font-weight: 700;
+}
+
+/* Glass-Cards (Clear Mode) dentro do PDF */
+.pdf-glass-card {
+    background: var(--pdf-card-bg);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid var(--pdf-card-border);
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+    page-break-inside: avoid;
+}
+
+.stats-card {
+    background: linear-gradient(145deg, #ffffff, #f8fafc);
+    border-left: 4px solid var(--accent-color);
+}
+
+.stats-info p { margin-bottom: 15px; color: var(--text-muted); font-size: 0.95rem;}
+.stats-list { list-style: none; }
+.stats-list li {
+    margin-bottom: 10px;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    color: var(--text-main);
+}
+.stats-list strong { color: var(--accent-color); font-size: 1.2rem; margin: 0 5px; }
+
+/* Tipografia dentro do PDF */
+.pdf-body {
+    flex: 1;
+    font-size: 11pt;
+    line-height: 1.7;
+    color: #334155;
+}
+
+.pdf-body h1, .pdf-body h2, .pdf-body h3 {
+    color: var(--text-main);
+    margin-bottom: 15px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 10px;
+}
+
+.pdf-body h2 { font-size: 1.4rem; }
+
+.pdf-body p { margin-bottom: 1.2em; }
+
+.pdf-body ul, .pdf-body ol {
+    margin-bottom: 1.2em;
+    padding-left: 20px;
+}
+
+.pdf-body li { margin-bottom: 8px; }
+
+/* Tabelas com Clear Mode */
+.pdf-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.pdf-body th {
+    background: #f8fafc;
+    color: var(--text-main);
+    text-align: left;
+    padding: 12px 15px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.pdf-body td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+/* Novo estilo para o Logotipo do WhatsApp */
+.whatsapp-contact-icon {
+    width: 1.2em;
+    height: 1.2em;
+    vertical-align: middle;
+    margin-right: 6px; /* Alinhamento ao lado dos números */
+    filter: drop-shadow(1px 2px 2px rgba(0,0,0,0.1)); /* Formal e integrado */
+}
+
+.pdf-footer {
+    margin-top: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    page-break-inside: avoid;
+}
+
+.footer-info {
+    text-align: center;
+    font-size: 0.85rem;
+    color: #94a3b8;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 15px;
+    width: 100%;
+}
+
+@media (max-width: 1024px) {
+    .app-container { flex-direction: column; height: auto; }
+    .editor-panel { flex: none; width: 100%; }
+}

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOTOLOG - Gerador de Propostas (Clear Mode)</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="glass-panel editor-panel">
+            <div class="brand">
+                <h2><span class="material-symbols-outlined">local_shipping</span> MOTOLOG</h2>
+                <p>Gerador de Propostas | Clear Mode</p>
+            </div>
+            
+            <div class="input-group">
+                <label for="logo-upload">Logo da Empresa (Opcional)</label>
+                <input type="file" id="logo-upload" accept="image/*">
+            </div>
+
+            <div class="input-group">
+                <label for="client-name">Nome do Cliente / Empresa</label>
+                <input type="text" id="client-name" placeholder="Ex: DOC DOC Material Hospitalar">
+            </div>
+
+            <div class="input-group">
+                <label for="proposal-text">Texto da Proposta (Cole o conteúdo aqui)</label>
+                <textarea id="proposal-text" rows="15" placeholder="Cole o conteúdo da proposta com os tópicos..."></textarea>
+            </div>
+
+            <button id="btn-generate" class="primary-btn">Baixar Proposta em PDF <span class="material-symbols-outlined" style="vertical-align: middle; font-size: 1.1em; margin-left: 5px;">download</span></button>
+        </aside>
+
+        <main class="preview-area">
+            <div class="a4-wrapper" id="pdf-content">
+                <div class="pdf-bg-glow"></div>
+
+                <header class="pdf-header">
+                    <img id="pdf-logo" src="" alt="Logo" style="display: none;">
+                    <div class="header-text">
+                        <h1 id="pdf-title">Proposta de Parceria Logística</h1>
+                        <p id="pdf-client">Preparado exclusivamente para: <span>Cliente</span></p>
+                        <div class="dates-badge">
+                            <span id="date-issue">Emissão: --/--/----</span> | 
+                            <span id="date-validity" class="highlight-date">Válido até: --/--/----</span>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="pdf-body" id="pdf-body-content">
+                    <p class="placeholder-text">Cole o texto ao lado. Os Glass-Cards serão gerados automaticamente aqui...</p>
+                </div>
+
+                <div class="pdf-glass-card stats-card">
+                    <div class="stats-info">
+                        <h2><span class="material-symbols-outlined">monitoring</span> Performance MOTOLOG</h2>
+                        <p>Nossos números comprovam a eficiência e segurança da nossa operação logística no Grande Rio.</p>
+                        <ul class="stats-list">
+                            <li><span class="material-symbols-outlined" style="color: var(--accent-color); margin-right: 8px;">check_circle</span> <strong>99.8%</strong> de Entregas realizadas no Prazo</li>
+                            <li><span class="material-symbols-outlined" style="color: var(--accent-color); margin-right: 8px;">check_circle</span> <strong>100%</strong> de Cobertura em Rotas Corporativas</li>
+                            <li><span class="material-symbols-outlined" style="color: var(--accent-color); margin-right: 8px;">check_circle</span> <strong>-25%</strong> de Redução Média em Custos Logísticos para Parceiros</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <footer class="pdf-footer">
+                    <p class="footer-info">MOTOLOG | Soluções em Logística - Base Operacional: Fonseca, Niterói, RJ</p>
+                </footer>
+            </div>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
