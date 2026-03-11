@@ -2,15 +2,13 @@
 
 :root {
     --bg-color: #f1f5f9; 
-    --glass-bg: rgba(255, 255, 255, 0.85); 
+    --glass-bg: rgba(255, 255, 255, 0.95); 
     --glass-border: rgba(0, 0, 0, 0.08); 
     --accent-color: #d97706; 
     --accent-glow: rgba(217, 119, 6, 0.15);
     --text-main: #0f172a; 
     --text-muted: #475569; 
     --pdf-bg: #ffffff;
-    --pdf-card-bg: rgba(248, 250, 252, 0.9);
-    --pdf-card-border: rgba(15, 23, 42, 0.06);
 }
 
 * {
@@ -30,8 +28,12 @@ body {
     padding: 20px;
     background-image: radial-gradient(circle at 10% 20%, rgba(217, 119, 6, 0.05), transparent 40%),
                       radial-gradient(circle at 90% 80%, rgba(15, 23, 42, 0.03), transparent 40%);
+    overflow-x: hidden;
 }
 
+/* ========================================= */
+/* 1. INTERFACE WEB E PAINEL DE CONTROLE     */
+/* ========================================= */
 .app-container {
     display: flex;
     gap: 30px;
@@ -42,8 +44,6 @@ body {
 
 .glass-panel {
     background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--glass-border);
     border-radius: 20px;
     padding: 28px;
@@ -66,80 +66,40 @@ body {
     gap: 10px;
 }
 
-.brand p {
-    font-size: 0.95rem;
-    color: var(--text-muted);
-    margin-top: 5px;
-}
+.brand p { font-size: 0.95rem; color: var(--text-muted); margin-top: 5px; }
 
-.input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.input-group label {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--text-main);
-}
+.input-group { display: flex; flex-direction: column; gap: 8px; }
+.input-group label { font-size: 0.9rem; font-weight: 600; color: var(--text-main); }
 
 input[type="text"], textarea, input[type="file"] {
-    width: 100%;
-    padding: 14px;
-    background: #ffffff;
-    border: 1px solid #cbd5e1;
-    border-radius: 10px;
-    color: var(--text-main);
-    font-size: 0.95rem;
-    outline: none;
-    transition: all 0.3s ease;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+    width: 100%; padding: 14px; background: #ffffff;
+    border: 1px solid #cbd5e1; border-radius: 10px;
+    color: var(--text-main); font-size: 0.95rem; outline: none; transition: all 0.3s ease;
 }
 
 input[type="text"]:focus, textarea:focus {
-    border-color: var(--accent-color);
-    box-shadow: 0 0 0 3px var(--accent-glow);
+    border-color: var(--accent-color); box-shadow: 0 0 0 3px var(--accent-glow);
 }
 
-textarea {
-    resize: vertical;
-}
+textarea { resize: vertical; }
 
 .primary-btn {
     background: linear-gradient(135deg, #facc15, #eab308); 
-    color: #1e293b;
-    border: none;
-    padding: 16px;
-    border-radius: 10px;
-    font-weight: 800;
-    font-size: 1.1rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    margin-top: auto;
-    box-shadow: 0 8px 15px rgba(234, 179, 8, 0.25);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    color: #1e293b; border: none; padding: 16px; border-radius: 10px;
+    font-weight: 800; font-size: 1.1rem; cursor: pointer;
+    transition: all 0.3s ease; margin-top: auto;
+    display: flex; align-items: center; justify-content: center;
 }
 
 .primary-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 20px rgba(234, 179, 8, 0.35);
+    transform: translateY(-3px); box-shadow: 0 12px 20px rgba(234, 179, 8, 0.35);
 }
 
-.material-symbols-outlined {
-    font-size: 1.25em;
-    vertical-align: middle;
-    color: var(--accent-color);
-}
+.material-symbols-outlined { font-size: 1.25em; vertical-align: middle; color: var(--accent-color); }
+.check-icon { color: var(--accent-color); margin-right: 8px; }
 
 .preview-area {
-    flex: 1;
-    overflow-y: auto;
-    display: flex;
-    justify-content: center;
-    padding: 10px;
+    flex: 1; overflow-y: auto; display: flex; justify-content: center; padding: 10px;
 }
 
 .preview-area::-webkit-scrollbar, .editor-panel::-webkit-scrollbar { width: 8px; }
@@ -147,246 +107,116 @@ textarea {
     background: #cbd5e1; border-radius: 4px;
 }
 
-/* ========================================================= */
-/* LAYOUT DA TELA (VISUALIZAÇÃO NO NAVEGADOR)                */
-/* ========================================================= */
+/* ========================================= */
+/* 2. PREVIEW VISUAL NA TELA (Navegador)     */
+/* ========================================= */
 .a4-wrapper {
-    background: var(--pdf-bg);
-    color: var(--text-main);
-    width: 210mm;
-    min-height: 297mm;
-    padding: 20mm 15mm;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    overflow: hidden;
+    background: var(--pdf-bg); color: var(--text-main);
+    width: 210mm; min-height: 297mm; padding: 20mm 15mm;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); border-radius: 8px;
+    display: flex; flex-direction: column; position: relative;
 }
 
 .pdf-bg-glow {
-    position: absolute;
-    top: -150px;
-    right: -150px;
-    width: 500px;
-    height: 500px;
+    position: absolute; top: -150px; right: -150px; width: 500px; height: 500px;
     background: radial-gradient(circle, rgba(234, 179, 8, 0.08), transparent 70%);
-    pointer-events: none;
-    z-index: 0;
+    pointer-events: none; z-index: 0;
 }
 
 .pdf-header {
-    display: flex;
-    align-items: flex-start;
-    gap: 20px;
-    border-bottom: 2px solid #e2e8f0;
-    padding-bottom: 15px;
-    margin-bottom: 20px;
+    display: flex; align-items: flex-start; gap: 20px; border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 15px; margin-bottom: 25px; position: relative; z-index: 1;
 }
 
-#pdf-logo {
-    max-height: 80px;
-    max-width: 160px;
-    object-fit: contain;
-}
-
-.header-text h1 {
-    font-size: 2rem;
-    color: var(--text-main);
-    letter-spacing: -0.5px;
-}
-
-.header-text p {
-    font-size: 1.1rem;
-    color: var(--text-muted);
-    margin-top: 5px;
-}
-
+#pdf-logo { max-height: 80px; max-width: 160px; object-fit: contain; }
+.header-text h1 { font-size: 2rem; color: var(--text-main); letter-spacing: -0.5px; }
+.header-text p { font-size: 1.1rem; color: var(--text-muted); margin-top: 5px; }
 .dates-badge {
-    margin-top: 10px;
-    display: inline-block;
-    background: #f8fafc;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    border: 1px solid #e2e8f0;
+    margin-top: 10px; display: inline-block; background: #f8fafc; padding: 6px 12px;
+    border-radius: 6px; font-size: 0.85rem; color: var(--text-muted); border: 1px solid #e2e8f0;
 }
+.highlight-date { color: var(--accent-color); font-weight: 700; }
 
-.highlight-date {
-    color: var(--accent-color);
-    font-weight: 700;
+.pdf-body { flex: 1; font-size: 11pt; line-height: 1.6; color: #334155; position: relative; z-index: 1; }
+.pdf-section-title {
+    color: var(--text-main); font-weight: 700; font-size: 1.3rem; display: flex; align-items: center;
+    border-bottom: 1.5px solid rgba(217, 119, 6, 0.2); padding-bottom: 6px; margin-top: 25px; margin-bottom: 12px;
 }
-
-.pdf-glass-card {
-    background: var(--pdf-card-bg);
-    border: 1px solid var(--pdf-card-border);
-    border-radius: 8px;
-    padding: 18px 20px;
-    margin-bottom: 15px;
-}
-
-.stats-card {
-    background: linear-gradient(145deg, #ffffff, #f8fafc);
-    border-left: 4px solid var(--accent-color);
-}
-
-.stats-info p { margin-bottom: 10px; color: var(--text-muted); font-size: 0.95rem;}
-.stats-list { list-style: none; }
-.stats-list li {
-    margin-bottom: 6px;
-    font-size: 0.95rem;
-    display: flex;
-    align-items: center;
-    color: var(--text-main);
-}
-
-.pdf-body {
-    flex: 1;
-    font-size: 10.5pt;
-    line-height: 1.6;
-    color: #334155;
-}
-
-.pdf-body h1, .pdf-body h2, .pdf-body h3 {
-    color: var(--text-main);
-    margin-bottom: 10px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border-bottom: 1px solid #e2e8f0;
-    padding-bottom: 8px;
-}
-
-.pdf-body h2 { font-size: 1.3rem; }
-.pdf-body p { margin-bottom: 0.8em; }
-.pdf-body ul, .pdf-body ol { margin-bottom: 0.8em; padding-left: 20px; }
-.pdf-body li { margin-bottom: 5px; }
+.pdf-section-title .material-symbols-outlined { margin-right: 8px; font-size: 1.2em; }
+.pdf-body p { margin-bottom: 1em; }
+.pdf-body ul { margin-bottom: 1em; padding-left: 20px; }
+.pdf-body li { margin-bottom: 6px; }
 
 .pdf-body table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 10px 0;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    overflow: hidden;
+    width: 100%; border-collapse: collapse; margin: 15px 0; background: #ffffff;
+    border: 1px solid #e2e8f0; table-layout: fixed; /* Essencial para tabelas */
 }
+.pdf-body th { background: #f8fafc; color: var(--text-main); text-align: left; padding: 10px 12px; border-bottom: 2px solid #e2e8f0; }
+.pdf-body td { padding: 10px 12px; border-bottom: 1px solid #e2e8f0; word-wrap: break-word; }
 
-.pdf-body th {
-    background: #f8fafc;
-    color: var(--text-main);
-    text-align: left;
-    padding: 10px 12px;
-    border-bottom: 2px solid #e2e8f0;
-    font-size: 0.95rem;
+.stats-card {
+    background: #f8fafc; border-left: 4px solid var(--accent-color); border-radius: 6px;
+    padding: 20px; margin-top: 30px; border: 1px solid #e2e8f0; border-left-width: 4px;
 }
-
-.pdf-body td {
-    padding: 10px 12px;
-    border-bottom: 1px solid #e2e8f0;
-    font-size: 0.95rem;
-}
-
-.whatsapp-contact-icon {
-    width: 1.2em;
-    height: 1.2em;
-    vertical-align: middle;
-    margin-right: 6px;
-}
+.stats-info p { margin-bottom: 10px; color: var(--text-muted); font-size: 0.95rem;}
+.stats-list { list-style: none; }
+.stats-list li { margin-bottom: 6px; font-size: 0.95rem; display: flex; align-items: center; color: var(--text-main); }
+.stats-list strong { color: var(--accent-color); font-size: 1.1rem; margin: 0 5px; }
 
 .pdf-footer {
-    margin-top: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.footer-info {
-    text-align: center;
-    font-size: 0.85rem;
-    color: #94a3b8;
-    border-top: 1px solid #e2e8f0;
-    padding-top: 15px;
-    width: 100%;
-}
-
-/* ========================================================================= */
-/* MODO EXPORTAÇÃO (CLONE INVISÍVEL): REGRAS PARA O PDF PERFEITO             */
-/* ========================================================================= */
-.pdf-strict-export {
-    /* 1. Trava matemática exata da largura para garantir que o texto não corte */
-    width: 800px !important; 
-    max-width: 800px !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    box-shadow: none !important;
-    border-radius: 0 !important;
-    background: #ffffff !important;
-    display: block !important;
-}
-
-/* Garante que nenhum texto ultrapasse os limites laterais */
-.pdf-strict-export * {
-    box-sizing: border-box !important;
-    max-width: 100% !important;
-}
-
-/* 2. Força os blocos a serem renderizados como blocos sólidos e opacos */
-.pdf-strict-export .pdf-glass-card,
-.pdf-strict-export .stats-card {
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    background-color: #f8fafc !important; /* Cor sólida clara */
-    border: 1px solid #cbd5e1 !important; /* Borda precisa e sólida */
-    box-shadow: none !important;
-    margin-bottom: 25px !important;
-    display: block !important;
-    /* 3. A regra de ouro para não fatiar os cards */
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-}
-
-/* Desativa os brilhos decorativos que corrompem a foto do html2canvas */
-.pdf-strict-export .pdf-bg-glow {
-    display: none !important;
-}
-
-.pdf-strict-export .pdf-body {
-    display: block !important;
-    flex: none !important;
-}
-
-.pdf-strict-export .pdf-header {
-    display: flex !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-}
-
-.pdf-strict-export .pdf-footer {
-    display: block !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-    margin-top: 30px !important;
-}
-
-/* Previne que tabelas quebrem as margens e cortem na direita */
-.pdf-strict-export table {
-    width: 100% !important;
-    table-layout: fixed !important;
-}
-
-.pdf-strict-export td, 
-.pdf-strict-export th,
-.pdf-strict-export p,
-.pdf-strict-export li {
-    word-wrap: break-word !important;
-    overflow-wrap: break-word !important;
+    margin-top: 30px; text-align: center; font-size: 0.85rem; color: #94a3b8;
+    border-top: 1px solid #e2e8f0; padding-top: 15px; width: 100%;
 }
 
 @media (max-width: 1024px) {
     .app-container { flex-direction: column; height: auto; }
     .editor-panel { flex: none; width: 100%; }
+}
+
+/* ========================================================= */
+/* 3. PRINT BUFFER INVISÍVEL (O Segredo do PDF Perfeito)     */
+/* ========================================================= */
+.print-buffer-container {
+    /* Esconde da tela do usuário, mas deixa o navegador renderizar perfeitamente */
+    position: absolute;
+    top: 0;
+    left: -9999px;
+    width: 800px; /* LARGURA FIXA DE ENGENHARIA: Impede corte do texto à direita */
+    background: #ffffff;
+    color: #0f172a;
+    display: block; /* Remove o display flex que bagunça o HTML2PDF */
+    padding: 0;
+    margin: 0;
+}
+
+/* Regras de Quebra de Página (Page Breaks) Forçadas para o PDF */
+.print-buffer-container .pdf-section-title {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+}
+
+.print-buffer-container p, 
+.print-buffer-container li, 
+.print-buffer-container tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+}
+
+.print-buffer-container .stats-card {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    margin-bottom: 20px !important;
+}
+
+.print-buffer-container .pdf-bg-glow {
+    display: none !important; /* Brilhos decorativos estragam a "foto" do canvas */
+}
+
+/* Força textos longos e tabelas a não escaparem da margem direita */
+.print-buffer-container * {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
 }
 
