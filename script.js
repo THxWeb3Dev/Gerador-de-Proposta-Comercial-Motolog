@@ -1,124 +1,336 @@
-// Captura dos elementos
-const logoUpload = document.getElementById('logo-upload');
-const clientNameInput = document.getElementById('client-name');
-const proposalTextInput = document.getElementById('proposal-text');
-const btnGenerate = document.getElementById('btn-generate');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
 
-const pdfLogo = document.getElementById('pdf-logo');
-const pdfClient = document.getElementById('pdf-client').querySelector('span');
-const pdfBodyContent = document.getElementById('pdf-body-content');
-const pdfElement = document.getElementById('pdf-content');
-
-// Logotipo oficial do WhatsApp em código vetorial puro (SVG) para evitar erros de renderização
-const waSvgIcon = `<svg class="whatsapp-contact-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="#25D366" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157.1zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg>`;
-
-// 1. Configurar Datas e Validade (10 dias)
-function setupDates() {
-    const today = new Date();
-    const validDate = new Date(today);
-    validDate.setDate(today.getDate() + 10); 
-
-    const formatDate = (date) => date.toLocaleDateString('pt-BR');
-
-    document.getElementById('date-issue').innerText = `Emissão: ${formatDate(today)}`;
-    document.getElementById('date-validity').innerText = `Válido até: ${formatDate(validDate)}`;
+:root {
+    --bg-color: #f1f5f9; 
+    --glass-bg: rgba(255, 255, 255, 0.85); 
+    --glass-border: rgba(0, 0, 0, 0.08); 
+    --accent-color: #d97706; 
+    --accent-glow: rgba(217, 119, 6, 0.15);
+    --text-main: #0f172a; 
+    --text-muted: #475569; 
+    --pdf-bg: #ffffff;
+    --pdf-card-bg: rgba(248, 250, 252, 0.9);
+    --pdf-card-border: rgba(15, 23, 42, 0.06);
 }
-setupDates();
 
-// 2. Lógica para carregar a Logo
-logoUpload.addEventListener('change', function(event) {
-    const file = event.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            pdfLogo.src = e.target.result;
-            pdfLogo.style.display = 'block';
-        }
-        reader.readAsDataURL(file);
-    } else {
-        pdfLogo.style.display = 'none';
-        pdfLogo.src = '';
-    }
-});
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
 
-// 3. Atualizar Nome do Cliente
-clientNameInput.addEventListener('input', e => {
-    pdfClient.textContent = e.target.value.trim() || 'Cliente';
-});
+body {
+    background: var(--bg-color);
+    color: var(--text-main);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background-image: radial-gradient(circle at 10% 20%, rgba(217, 119, 6, 0.05), transparent 40%),
+                      radial-gradient(circle at 90% 80%, rgba(15, 23, 42, 0.03), transparent 40%);
+}
 
-// 4. Renderizar Texto, Formatar em Glass-Cards e Inserir Ícones Formais
-proposalTextInput.addEventListener('input', function(e) {
-    const markdownText = e.target.value;
-    
-    if (markdownText.trim() === '') {
-        pdfBodyContent.innerHTML = '<p class="placeholder-text">Cole o texto ao lado. Os Glass-Cards serão gerados automaticamente aqui...</p>';
-        return;
-    }
+.app-container {
+    display: flex;
+    gap: 30px;
+    width: 100%;
+    max-width: 1500px;
+    height: 90vh;
+}
 
-    // Converter Markdown para HTML puro
-    let rawHtml = marked.parse(markdownText);
-    
-    // Injetar o ícone do WhatsApp limpo
-    rawHtml = rawHtml.replace(/<strong>WhatsApp:<\/strong>/g, `<strong>${waSvgIcon}WhatsApp:</strong>`);
+.glass-panel {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.05);
+}
 
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = rawHtml;
-    
-    let finalHtml = '';
-    let currentCardContent = '';
-    
-    // Nomes oficiais dos ícones do Google Material Symbols
-    function getIconForTitle(titleText) {
-        const text = titleText.toLowerCase();
-        if(text.includes('apresentação') || text.includes('desafio')) return 'campaign';
-        if(text.includes('estrutura') || text.includes('operação')) return 'domain';
-        if(text.includes('valor') || text.includes('investimento') || text.includes('tabela')) return 'payments';
-        if(text.includes('flexibilidade') || text.includes('pagamento')) return 'handshake';
-        if(text.includes('benefício') || text.includes('vantagem')) return 'verified';
-        if(text.includes('conclusão') || text.includes('contato')) return 'support_agent';
-        return 'label'; 
-    }
+.editor-panel {
+    flex: 0 0 420px;
+    overflow-y: auto;
+}
 
-    Array.from(tempDiv.children).forEach(child => {
-        if (['H1', 'H2', 'H3'].includes(child.tagName)) {
-            
-            if (currentCardContent !== '') {
-                finalHtml += `<div class="pdf-glass-card">${currentCardContent}</div>`;
-                currentCardContent = '';
-            }
-            
-            const iconName = getIconForTitle(child.innerText);
-            child.innerHTML = `<span class="material-symbols-outlined">${iconName}</span> ` + child.innerHTML;
-            
-            currentCardContent += child.outerHTML;
-        } else {
-            currentCardContent += child.outerHTML;
-        }
-    });
-    
-    if (currentCardContent !== '') {
-        finalHtml += `<div class="pdf-glass-card">${currentCardContent}</div>`;
-    }
-    
-    pdfBodyContent.innerHTML = finalHtml;
-});
+.brand h2 {
+    color: var(--text-main);
+    font-size: 1.8rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
 
-// 5. Gerar e Salvar o PDF
-btnGenerate.addEventListener('click', function() {
-    const opt = {
-        margin:       0, 
-        filename:     `Proposta_MOTOLOG_${clientNameInput.value || 'Cliente'}.pdf`,
-        image:        { type: 'jpeg', quality: 1 },
-        html2canvas:  { scale: 3, useCORS: true, backgroundColor: '#ffffff' }, 
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
+.brand p {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    margin-top: 5px;
+}
 
-    const originalText = btnGenerate.innerHTML;
-    btnGenerate.innerHTML = 'Gerando Proposta Clear... <span class="material-symbols-outlined" style="vertical-align: middle; font-size: 1.1em; margin-left: 5px;">hourglass_empty</span>';
-    btnGenerate.disabled = true;
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
 
-    html2pdf().set(opt).from(pdfElement).save().then(() => {
-        btnGenerate.innerHTML = originalText;
-        btnGenerate.disabled = false;
-    });
-});
+.input-group label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+input[type="text"], textarea, input[type="file"] {
+    width: 100%;
+    padding: 14px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    color: var(--text-main);
+    font-size: 0.95rem;
+    outline: none;
+    transition: all 0.3s ease;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+}
+
+input[type="text"]:focus, textarea:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+textarea {
+    resize: vertical;
+}
+
+.primary-btn {
+    background: linear-gradient(135deg, #facc15, #eab308); 
+    color: #1e293b;
+    border: none;
+    padding: 16px;
+    border-radius: 10px;
+    font-weight: 800;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: auto;
+    box-shadow: 0 8px 15px rgba(234, 179, 8, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.primary-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 20px rgba(234, 179, 8, 0.35);
+}
+
+.material-symbols-outlined {
+    font-size: 1.25em;
+    vertical-align: middle;
+    color: var(--accent-color);
+    filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.08)); 
+}
+
+.preview-area {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    justify-content: center;
+    padding: 10px;
+}
+
+.preview-area::-webkit-scrollbar, .editor-panel::-webkit-scrollbar { width: 8px; }
+.preview-area::-webkit-scrollbar-thumb, .editor-panel::-webkit-scrollbar-thumb {
+    background: #cbd5e1; border-radius: 4px;
+}
+
+.a4-wrapper {
+    background: var(--pdf-bg);
+    color: var(--text-main);
+    width: 210mm;
+    min-height: 297mm;
+    padding: 20mm 15mm; /* Margens visuais na tela reduzidas */
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+}
+
+/* IMPORTANTE: Quando gerar o PDF, removemos o padding visual da tela */
+.a4-wrapper.exporting {
+    padding: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    min-height: auto !important;
+}
+
+.pdf-bg-glow {
+    position: absolute;
+    top: -150px;
+    right: -150px;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(234, 179, 8, 0.08), transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.pdf-header, .pdf-body, .stats-card, .pdf-footer {
+    position: relative;
+    z-index: 1;
+}
+
+.pdf-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 15px; /* Reduzido */
+    margin-bottom: 20px; /* Reduzido */
+}
+
+#pdf-logo {
+    max-height: 80px;
+    max-width: 160px;
+    object-fit: contain;
+}
+
+.header-text h1 {
+    font-size: 2rem;
+    color: var(--text-main);
+    letter-spacing: -0.5px;
+}
+
+.header-text p {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    margin-top: 5px;
+}
+
+.dates-badge {
+    margin-top: 10px;
+    display: inline-block;
+    background: #f8fafc;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    border: 1px solid #e2e8f0;
+}
+
+.highlight-date {
+    color: var(--accent-color);
+    font-weight: 700;
+}
+
+/* Espaçamentos dos Cards corrigidos para fluidez */
+.pdf-glass-card {
+    background: var(--pdf-card-bg);
+    border: 1px solid var(--pdf-card-border);
+    border-radius: 8px; /* Bordas mais sutis */
+    padding: 15px 20px; /* Espaço interno reduzido */
+    margin-bottom: 12px; /* Muito mais próximos um do outro */
+    page-break-inside: avoid; /* Evita cortar o card no meio */
+    break-inside: avoid;
+}
+
+.stats-card {
+    background: linear-gradient(145deg, #ffffff, #f8fafc);
+    border-left: 4px solid var(--accent-color);
+}
+
+.stats-info p { margin-bottom: 10px; color: var(--text-muted); font-size: 0.95rem;}
+.stats-list { list-style: none; }
+.stats-list li {
+    margin-bottom: 6px;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    color: var(--text-main);
+}
+.stats-list strong { color: var(--accent-color); font-size: 1.1rem; margin: 0 5px; }
+
+.pdf-body {
+    flex: 1;
+    font-size: 10.5pt; /* Fonte levemente ajustada para caber mais conteúdo */
+    line-height: 1.5;
+    color: #334155;
+}
+
+.pdf-body h1, .pdf-body h2, .pdf-body h3 {
+    color: var(--text-main);
+    margin-bottom: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 8px;
+}
+
+.pdf-body h2 { font-size: 1.3rem; }
+.pdf-body p { margin-bottom: 0.8em; }
+.pdf-body ul, .pdf-body ol { margin-bottom: 0.8em; padding-left: 20px; }
+.pdf-body li { margin-bottom: 5px; }
+
+.pdf-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.pdf-body th {
+    background: #f8fafc;
+    color: var(--text-main);
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 2px solid #e2e8f0;
+    font-size: 0.95rem;
+}
+
+.pdf-body td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 0.95rem;
+}
+
+.whatsapp-contact-icon {
+    width: 1.2em;
+    height: 1.2em;
+    vertical-align: middle;
+    margin-right: 6px;
+    filter: drop-shadow(1px 2px 2px rgba(0,0,0,0.1));
+}
+
+.pdf-footer {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    page-break-inside: avoid;
+}
+
+.footer-info {
+    text-align: center;
+    font-size: 0.85rem;
+    color: #94a3b8;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 15px;
+    width: 100%;
+}
+
+@media (max-width: 1024px) {
+    .app-container { flex-direction: column; height: auto; }
+    .editor-panel { flex: none; width: 100%; }
+}
+
