@@ -148,26 +148,19 @@ textarea {
     background: #cbd5e1; border-radius: 4px;
 }
 
+/* Base do A4 na tela */
 .a4-wrapper {
     background: var(--pdf-bg);
     color: var(--text-main);
     width: 210mm;
     min-height: 297mm;
-    padding: 20mm 15mm; /* Margens visuais na tela reduzidas */
+    padding: 20mm 15mm;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
     border-radius: 8px;
     display: flex;
     flex-direction: column;
     position: relative;
     overflow: hidden;
-}
-
-/* IMPORTANTE: Quando gerar o PDF, removemos o padding visual da tela */
-.a4-wrapper.exporting {
-    padding: 0 !important;
-    box-shadow: none !important;
-    border-radius: 0 !important;
-    min-height: auto !important;
 }
 
 .pdf-bg-glow {
@@ -191,8 +184,8 @@ textarea {
     align-items: flex-start;
     gap: 20px;
     border-bottom: 2px solid #e2e8f0;
-    padding-bottom: 15px; /* Reduzido */
-    margin-bottom: 20px; /* Reduzido */
+    padding-bottom: 15px;
+    margin-bottom: 20px;
 }
 
 #pdf-logo {
@@ -229,15 +222,12 @@ textarea {
     font-weight: 700;
 }
 
-/* Espaçamentos dos Cards corrigidos para fluidez */
 .pdf-glass-card {
     background: var(--pdf-card-bg);
     border: 1px solid var(--pdf-card-border);
-    border-radius: 8px; /* Bordas mais sutis */
-    padding: 15px 20px; /* Espaço interno reduzido */
-    margin-bottom: 12px; /* Muito mais próximos um do outro */
-    page-break-inside: avoid; /* Evita cortar o card no meio */
-    break-inside: avoid;
+    border-radius: 8px;
+    padding: 15px 20px;
+    margin-bottom: 15px;
 }
 
 .stats-card {
@@ -258,8 +248,8 @@ textarea {
 
 .pdf-body {
     flex: 1;
-    font-size: 10.5pt; /* Fonte levemente ajustada para caber mais conteúdo */
-    line-height: 1.5;
+    font-size: 10.5pt;
+    line-height: 1.6;
     color: #334155;
 }
 
@@ -317,7 +307,6 @@ textarea {
     display: flex;
     flex-direction: column;
     align-items: center;
-    page-break-inside: avoid;
 }
 
 .footer-info {
@@ -327,6 +316,32 @@ textarea {
     border-top: 1px solid #e2e8f0;
     padding-top: 15px;
     width: 100%;
+}
+
+/* ============================================================ */
+/* CRÍTICO PARA O PDF: MODO DE EXPORTAÇÃO (Desativa o Flexbox) */
+/* ============================================================ */
+.a4-wrapper.exporting {
+    padding: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    min-height: auto !important;
+    display: block !important; /* Remove o display: flex que quebra as páginas */
+}
+
+.a4-wrapper.exporting .pdf-body {
+    display: block !important;
+    flex: none !important;
+}
+
+.a4-wrapper.exporting .pdf-glass-card {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    margin-bottom: 15px !important;
+}
+
+.a4-wrapper.exporting .pdf-footer {
+    page-break-inside: avoid !important;
 }
 
 @media (max-width: 1024px) {
