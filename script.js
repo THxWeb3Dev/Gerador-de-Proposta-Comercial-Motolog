@@ -1,170 +1,192 @@
-document.addEventListener('DOMContentLoaded', () => {
-    
-    // Captura dos elementos Web
-    const logoUpload = document.getElementById('logo-upload');
-    const clientNameInput = document.getElementById('client-name');
-    const proposalTextInput = document.getElementById('proposal-text');
-    const btnGenerate = document.getElementById('btn-generate');
+'use strict';
 
-    const pdfLogo = document.getElementById('pdf-logo');
-    const pdfClient = document.getElementById('pdf-client').querySelector('span');
-    const pdfBodyContent = document.getElementById('pdf-body-content');
-    const webPreviewContent = document.getElementById('web-preview-content');
-    
-    // Contêiner de Buffer para o PDF
-    const printBufferContainer = document.getElementById('print-buffer-container');
+const DB_VERSION = '1.0.0';
+const DB_KEY = `gotrack_routes_db_${DB_VERSION}`;
+const LEGACY_KEYS = ['gotrack_routes', 'routes', 'deliveries'];
+const SESSION_KEY = 'gotrack_session_v1';
+const PRICES = { Natura: 7.5, Outros: 10 };
 
-    // SVG do WhatsApp vetorizado com alinhamento preciso
-    const waSvgIcon = `<svg style="width: 1.2em; height: 1.2em; vertical-align: middle; margin-right: 5px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="#25D366" d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157.1zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg>`;
+const app = document.getElementById('app');
+const modal = document.getElementById('route-modal');
+let state = { user: null, tab: 'history', db: { version: DB_VERSION, routes: [] } };
 
-    // Configuração Automática de Datas
-    function initializeDates() {
-        const today = new Date();
-        const validDate = new Date(today);
-        validDate.setDate(today.getDate() + 10); 
-        const formatData = (date) => date.toLocaleDateString('pt-BR');
-        document.getElementById('date-issue').innerText = `Emissão: ${formatData(today)}`;
-        document.getElementById('date-validity').innerText = `Válido até: ${formatData(validDate)}`;
-    }
-    initializeDates();
+const uid = () => crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
+const money = value => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const dateKey = date => new Date(date).toISOString().slice(0, 10);
+const escapeHtml = value => String(value || '').replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
+const logo = () => document.getElementById('brand-logo').innerHTML;
 
-    // Upload de Logo e persistência no Base64
-    let currentLogoBase64 = '';
-    logoUpload.addEventListener('change', (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                currentLogoBase64 = e.target.result;
-                pdfLogo.src = currentLogoBase64;
-                pdfLogo.style.display = 'block';
-            }
-            reader.readAsDataURL(file);
-        } else {
-            currentLogoBase64 = '';
-            pdfLogo.style.display = 'none';
-            pdfLogo.src = '';
-        }
-    });
+function safeParse(raw) {
+  try {
+    return JSON.parse(raw || 'null');
+  } catch {
+    return null;
+  }
+}
 
-    // Atualização do Nome do Cliente
-    clientNameInput.addEventListener('input', e => {
-        pdfClient.textContent = e.target.value.trim() || 'Cliente';
-    });
+function loadDb() {
+  const current = safeParse(localStorage.getItem(DB_KEY));
+  if (current?.routes) return current;
 
-    // Motor Inteligente de Ícones
-    function getIconForTitle(titleText) {
-        const text = titleText.toLowerCase();
-        if(text.includes('apresentação') || text.includes('desafio')) return 'campaign';
-        if(text.includes('estrutura') || text.includes('operação')) return 'domain';
-        if(text.includes('valor') || text.includes('investimento') || text.includes('tabela')) return 'payments';
-        if(text.includes('flexibilidade') || text.includes('pagamento')) return 'handshake';
-        if(text.includes('benefício') || text.includes('vantagem')) return 'verified';
-        if(text.includes('conclusão') || text.includes('contato')) return 'support_agent';
-        return 'label'; 
-    }
+  const previousVersionKey = Object.keys(localStorage).find(key => key.startsWith('gotrack_routes_db_'));
+  const previous = previousVersionKey ? safeParse(localStorage.getItem(previousVersionKey)) : null;
+  if (previous?.routes) return saveDb({ ...previous, version: DB_VERSION });
 
-    // Processamento do Texto com Sistema Anti-Falhas e Regex Fallback
-    function processMarkdown(text) {
-        let rawHtml = '';
-        try {
-            if (typeof marked !== 'undefined') {
-                rawHtml = marked.parse ? marked.parse(text) : marked(text);
-            } else {
-                throw new Error("Marked CDN falhou");
-            }
-        } catch (error) {
-            console.warn("Usando parser nativo de fallback.");
-            rawHtml = text.replace(/^### (.*$)/gim, '<h3>$1</h3>')
-                          .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-                          .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-                          .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
-                          .replace(/^\* (.*$)/gim, '<li>$1</li>')
-                          .split('\n\n').map(p => {
-                              if(p.startsWith('<h') || p.startsWith('<li')) return p;
-                              return `<p>${p}</p>`;
-                          }).join('');
-        }
+  for (const key of LEGACY_KEYS) {
+    const legacy = safeParse(localStorage.getItem(key));
+    if (Array.isArray(legacy)) return saveDb({ version: DB_VERSION, routes: legacy });
+  }
+  return saveDb({ version: DB_VERSION, routes: seedRoutes() });
+}
 
-        rawHtml = rawHtml.replace(/<strong>WhatsApp:<\/strong>/g, `<strong>${waSvgIcon}WhatsApp:</strong>`);
+function saveDb(db = state.db) {
+  localStorage.setItem(DB_KEY, JSON.stringify({ ...db, version: DB_VERSION }));
+  return { ...db, version: DB_VERSION };
+}
 
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = rawHtml;
-        let finalHtml = '';
+function seedRoutes() {
+  const today = new Date();
+  return [0, 1, 2].map((offset, index) => ({
+    id: uid(), recipient: ['Maria Silva', 'João Pereira', 'Ana Costa'][index], district: ['Centro', 'Icaraí', 'Barreto'][index],
+    receiver: ['Carlos Silva', 'Lucia Pereira', 'Rafael Costa'][index], document: ['CPF ***.123', '(21) 99999-0000', 'RG 123456'][index],
+    category: index === 1 ? 'Outros' : 'Natura', status: index === 2 ? 'estornada' : 'concluida', qrName: 'nota-fiscal.jpg',
+    createdAt: new Date(today.getFullYear(), today.getMonth(), today.getDate() - offset, 10 + index, 25).toISOString()
+  }));
+}
 
-        Array.from(tempDiv.children).forEach(child => {
-            if (['H1', 'H2', 'H3'].includes(child.tagName)) {
-                const iconName = getIconForTitle(child.innerText);
-                child.innerHTML = `<span class="material-symbols-outlined">${iconName}</span> ` + child.innerHTML;
-                child.className = 'pdf-section-title'; 
-            }
-            finalHtml += child.outerHTML;
-        });
-        
-        return finalHtml;
-    }
+function init() {
+  state.db = loadDb();
+  state.user = safeParse(localStorage.getItem(SESSION_KEY));
+  render();
+}
 
-    // Listener de digitação atualiza apenas a Web View
-    proposalTextInput.addEventListener('input', function(e) {
-        const text = e.target.value;
-        if (text.trim() === '') {
-            pdfBodyContent.innerHTML = '<p style="color: #94a3b8; font-style: italic;">A formatação da proposta aparecerá aqui em tempo real. Cole o texto no painel ao lado.</p>';
-        } else {
-            pdfBodyContent.innerHTML = processMarkdown(text);
-        }
-    });
+function render() {
+  if (!state.user) return renderLogin();
+  app.innerHTML = `<header class="glass topbar"><div class="user">${logo()}<div><h2>Rotas GO Track</h2><p class="muted">Sessão: <b>${escapeHtml(state.user.name)}</b> · v ${DB_VERSION}</p></div></div><button class="btn ghost" data-action="logout">Sair</button></header>${renderTab()}${renderNav()}`;
+}
 
-    // =========================================================================
-    // O GERADOR DE PDF PERFEITO (Padrão Gamma)
-    // =========================================================================
-    btnGenerate.addEventListener('click', function() {
-        if (typeof html2pdf === 'undefined') {
-            alert("A biblioteca de PDF foi bloqueada pelo seu navegador ou conexão. Recarregue a página.");
-            return;
-        }
+function renderLogin() {
+  app.className = 'login';
+  app.innerHTML = `<section class="glass login-card"><div class="brand-row">${logo()}<div><h1>GO Track</h1><p>Controle de Entregas</p></div></div><form id="login-form"><div class="field"><label>Usuário</label><input name="name" required minlength="2" autocomplete="username" placeholder="Ex.: admin"></div><div class="field"><label>Senha</label><input name="password" required minlength="3" type="password" autocomplete="current-password" placeholder="Digite sua senha"></div><button class="btn primary" type="submit">Entrar no painel</button></form><p class="muted">Login simples local. A sessão persiste no navegador via localStorage.</p></section>`;
+}
 
-        const originalText = btnGenerate.innerHTML;
-        btnGenerate.innerHTML = 'Processando Impressão... <span class="material-symbols-outlined" style="vertical-align: middle; margin-left: 5px;">hourglass_empty</span>';
-        btnGenerate.disabled = true;
+function renderNav() {
+  const items = [['history', '⌘', 'Histórico'], ['new', '+', 'Nova'], ['close', '▤', 'Fechamento']];
+  return `<nav class="glass tabs">${items.map(([id, icon, label]) => `<button class="tab ${state.tab === id ? 'active' : ''}" data-tab="${id}"><span>${icon}</span>${label}</button>`).join('')}</nav>`;
+}
 
-        // 1. Clona a estrutura perfeita da tela web
-        const cloneDOM = webPreviewContent.cloneNode(true);
-        
-        // 2. Transfere o clone para o "Print Buffer" (Que é travado em 800px)
-        printBufferContainer.innerHTML = ''; 
-        printBufferContainer.appendChild(cloneDOM);
+function renderTab() {
+  if (state.tab === 'new') return renderNew();
+  if (state.tab === 'close') return renderClose();
+  return renderHistory();
+}
 
-        // Configuração Nativa e Segura para o html2pdf
-        const opt = {
-            margin:       [15, 15, 20, 15], // Margens do papel A4 físico
-            filename:     `Proposta_MOTOLOG_${clientNameInput.value || 'Cliente'}.pdf`,
-            image:        { type: 'jpeg', quality: 1 },
-            html2canvas:  { 
-                scale: 2, 
-                useCORS: true, 
-                backgroundColor: '#ffffff',
-                windowWidth: 800 // Garante que a foto do canvas leia exatamente os 800px da div, sem cortar.
-            },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            pagebreak:    { 
-                mode: ['css', 'legacy'], 
-                // A regra mais importante: Ele empurra elementos inteiros para baixo em vez de cortar no meio
-                avoid: ['.pdf-section-title', '.stats-card', 'table', 'tr', 'li', 'p'] 
-            }
-        };
+function renderHistory() {
+  const total = state.db.routes.length;
+  const done = state.db.routes.filter(route => route.status === 'concluida').length;
+  const reversed = total - done;
+  const groups = groupByDay(state.db.routes);
+  return `<section class="stats"><div class="glass stat"><span>Total</span><b>${total}</b></div><div class="glass stat"><span>Entregues</span><b>${done}</b></div><div class="glass stat"><span>Estornadas</span><b style="color:#ef6549">${reversed}</b></div></section><section class="glass panel">${total ? Object.entries(groups).map(([day, routes]) => `<div class="day"><h3>${day}</h3>${routes.map(routeCard).join('')}</div>`).join('') : `<div class="empty">${logo()}<h2>Nenhuma rota cadastrada ainda</h2><p class="muted">Adicione sua primeira entrega para vê-la organizada por dia da semana.</p></div>`}</section>`;
+}
 
-        // 3. Manda gerar o PDF lendo APENAS a div de engenharia oculta, e não a tela visível.
-        html2pdf().set(opt).from(printBufferContainer).save().then(() => {
-            printBufferContainer.innerHTML = ''; // Limpa a memória após o sucesso
-            btnGenerate.innerHTML = originalText;
-            btnGenerate.disabled = false;
-        }).catch(err => {
-            alert("Ocorreu um erro ao gerar o documento. Tente novamente.");
-            console.error(err);
-            printBufferContainer.innerHTML = '';
-            btnGenerate.innerHTML = originalText;
-            btnGenerate.disabled = false;
-        });
-    });
+function groupByDay(routes) {
+  return [...routes].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).reduce((acc, route) => {
+    const label = new Date(route.createdAt).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit' });
+    acc[label] = acc[label] || [];
+    acc[label].push(route);
+    return acc;
+  }, {});
+}
 
+function routeCard(route) {
+  return `<button class="route" data-open-route="${route.id}"><div><strong>${escapeHtml(route.recipient)}</strong><p class="muted">${escapeHtml(route.district)} · ${new Date(route.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} · ${route.category}</p></div><span class="badge ${route.status === 'concluida' ? 'ok' : 'back'}">${route.status}</span></button>`;
+}
+
+function renderNew() {
+  return `<section class="glass panel"><h1>Nova Entrega</h1><p class="muted">Registre a rota com os dados do recebedor e a nota fiscal.</p><form id="delivery-form" class="form-grid"><div class="field"><label>Nome do destinatário</label><input name="recipient" required placeholder="Ex.: Maria Silva"></div><div class="field"><label>Bairro</label><input name="district" required placeholder="Ex.: Centro"></div><div class="field"><label>Nome do recebedor</label><input name="receiver" required placeholder="Quem recebeu"></div><div class="field"><label>Documento / telefone</label><input name="document" required placeholder="RG, CPF ou telefone"></div><div class="field"><label>Status</label><select name="status"><option value="concluida">Concluída</option><option value="estornada">Estornada</option></select></div><div class="field"><span class="section-label">Origem da carga</span><div class="switch"><input id="nat" name="category" value="Natura" type="radio" checked><label for="nat">Natura</label><input id="out" name="category" value="Outros" type="radio"><label for="out">Outros</label></div></div><div class="span"><span class="section-label">Código QR / Nota Fiscal</span><label class="filebox"><strong>📷 Tirar foto ou anexar</strong><span id="file-name" class="muted">PNG/JPG até 4 MB</span><input name="qr" type="file" accept="image/png,image/jpeg" capture="environment"></label></div><button class="btn primary span" type="submit">Registrar entrega</button></form></section>`;
+}
+
+function closurePeriod(previous = false) {
+  const now = new Date();
+  const end = now.getDate() <= 15 ? new Date(now.getFullYear(), now.getMonth(), 15) : new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const start = end.getDate() === 15 ? new Date(end.getFullYear(), end.getMonth(), 1) : new Date(end.getFullYear(), end.getMonth(), 16);
+  if (!previous) return { start, end };
+  const prevEnd = new Date(start); prevEnd.setDate(start.getDate() - 1);
+  const prevStart = prevEnd.getDate() === 15 ? new Date(prevEnd.getFullYear(), prevEnd.getMonth(), 1) : new Date(prevEnd.getFullYear(), prevEnd.getMonth(), 16);
+  return { start: prevStart, end: prevEnd };
+}
+
+function rowsForPeriod(period) {
+  const rows = [];
+  for (let d = new Date(period.start); d <= period.end; d.setDate(d.getDate() + 1)) {
+    const routes = state.db.routes.filter(route => dateKey(route.createdAt) === dateKey(d));
+    const done = routes.filter(route => route.status === 'concluida');
+    const reversed = routes.filter(route => route.status === 'estornada').length;
+    const natura = done.filter(route => route.category === 'Natura').length;
+    const outros = done.filter(route => route.category === 'Outros').length;
+    rows.push({ date: new Date(d), done: done.length, reversed, natura, outros, value: natura * PRICES.Natura + outros * PRICES.Outros });
+  }
+  return rows;
+}
+
+function renderClose() {
+  const period = closurePeriod(state.previousPeriod);
+  const rows = rowsForPeriod(period);
+  const totals = rows.reduce((acc, row) => ({ done: acc.done + row.done, reversed: acc.reversed + row.reversed, natura: acc.natura + row.natura, outros: acc.outros + row.outros, value: acc.value + row.value }), { done: 0, reversed: 0, natura: 0, outros: 0, value: 0 });
+  const today = new Date();
+  const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+  const isClosingDay = today.getDate() === 15 || today.getDate() === lastDay;
+  return `<section class="glass panel"><h2>${isClosingDay ? 'Hoje é dia de fechamento' : 'Prévia de fechamento'}</h2><p class="muted">Período: ${period.start.toLocaleDateString('pt-BR')} – ${period.end.toLocaleDateString('pt-BR')}</p><div class="actions"><button class="btn ${state.previousPeriod ? 'ghost' : 'primary'}" data-period="current">Período atual</button><button class="btn ${state.previousPeriod ? 'primary' : 'ghost'}" data-period="previous">Período anterior</button><button class="btn primary" data-action="pdf">Gerar e baixar PDF</button></div><div class="totals"><div class="total"><b>${totals.done}</b><span> entregues</span></div><div class="total"><b>${totals.reversed}</b><span> estornadas</span></div><div class="total"><b>${totals.natura}</b><span> Natura</span></div><div class="total"><b>${money(totals.value)}</b><span> total</span></div></div><div class="table-wrap"><table><thead><tr><th>Dia</th><th>Concluídas</th><th>Estornadas</th><th>Natura</th><th>Outros</th><th>Valor</th></tr></thead><tbody>${rows.map(row => `<tr><td>${row.date.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' })}</td><td>${row.done}</td><td>${row.reversed}</td><td>${row.natura}</td><td>${row.outros}</td><td>${money(row.value)}</td></tr>`).join('')}</tbody></table></div></section>`;
+}
+
+function openRoute(id) {
+  const route = state.db.routes.find(item => item.id === id);
+  if (!route) return;
+  modal.innerHTML = `<article class="glass modal-card"><h2>${escapeHtml(route.recipient)}</h2><p class="muted">${new Date(route.createdAt).toLocaleString('pt-BR')}</p><p><b>Status:</b> ${route.status}</p><p><b>Bairro:</b> ${escapeHtml(route.district)}</p><p><b>Recebedor:</b> ${escapeHtml(route.receiver)}</p><p><b>Documento/Telefone:</b> ${escapeHtml(route.document)}</p><p><b>Categoria:</b> ${route.category} · <b>QR:</b> ${escapeHtml(route.qrName || 'não anexado')}</p><div class="actions"><button class="btn ghost" data-action="close-modal">Fechar</button><button class="btn danger" data-delete="${route.id}">Excluir rota</button></div></article>`;
+  modal.setAttribute('aria-hidden', 'false');
+}
+
+function generatePdf() {
+  if (typeof html2pdf === 'undefined') return alert('Biblioteca de PDF indisponível. Verifique a conexão e tente novamente.');
+  const content = document.createElement('div');
+  content.className = 'print-report';
+  content.innerHTML = `<h1>GO Track Routes - Relatório de Faturamento</h1>${renderClose().replace(/<button[\s\S]*?<\/button>/g, '')}`;
+  html2pdf().set({ margin: 10, filename: `GOTrack_Fechamento_${dateKey(new Date())}.pdf`, jsPDF: { unit: 'mm', format: 'a4' } }).from(content).save();
+}
+
+document.addEventListener('submit', event => {
+  event.preventDefault();
+  if (event.target.id === 'login-form') {
+    state.user = { name: new FormData(event.target).get('name').trim(), loginAt: new Date().toISOString() };
+    localStorage.setItem(SESSION_KEY, JSON.stringify(state.user));
+    app.className = 'shell';
+    render();
+  }
+  if (event.target.id === 'delivery-form') {
+    const data = new FormData(event.target);
+    const values = Object.fromEntries(data.entries());
+    if (['recipient', 'district', 'receiver', 'document'].some(key => !String(values[key]).trim())) return alert('Preencha todos os campos obrigatórios.');
+    state.db.routes.unshift({ id: uid(), recipient: values.recipient.trim(), district: values.district.trim(), receiver: values.receiver.trim(), document: values.document.trim(), category: values.category, status: values.status, qrName: values.qr?.name || '', createdAt: new Date().toISOString() });
+    state.db = saveDb();
+    state.tab = 'history';
+    render();
+  }
 });
+
+document.addEventListener('click', event => {
+  const target = event.target.closest('button');
+  if (!target) return;
+  if (target.dataset.tab) { state.tab = target.dataset.tab; render(); }
+  if (target.dataset.action === 'logout') { localStorage.removeItem(SESSION_KEY); state.user = null; app.className = 'login'; render(); }
+  if (target.dataset.openRoute) openRoute(target.dataset.openRoute);
+  if (target.dataset.action === 'close-modal') modal.setAttribute('aria-hidden', 'true');
+  if (target.dataset.delete) { state.db.routes = state.db.routes.filter(route => route.id !== target.dataset.delete); state.db = saveDb(); modal.setAttribute('aria-hidden', 'true'); render(); }
+  if (target.dataset.period) { state.previousPeriod = target.dataset.period === 'previous'; render(); }
+  if (target.dataset.action === 'pdf') generatePdf();
+});
+
+document.addEventListener('change', event => {
+  if (event.target.name === 'qr') document.getElementById('file-name').textContent = event.target.files[0]?.name || 'PNG/JPG até 4 MB';
+});
+
+init();
